@@ -109,15 +109,15 @@ class Evildao {
 	
 	//删除html标签，得到纯文本。可以处理嵌套的标签
     static public function del_html_tags($string) {
-		/**
-		 +----------------------------------------------------------
-		 * @access public
-		 +----------------------------------------------------------
-		 * @param string $string 要处理的html
-		 +----------------------------------------------------------
-		 * @return string
-		 +----------------------------------------------------------
-		 */
+		/*
+			+----------------------------------------------------------
+			| @access public
+			+----------------------------------------------------------
+			| @param string $string 要处理的html
+			+----------------------------------------------------------
+			| @return string
+			+----------------------------------------------------------
+		*/
         while(strstr($string, '>')) {
             $currentBeg = strpos($string, '<');
             $currentEnd = strpos($string, '>');
@@ -130,17 +130,17 @@ class Evildao {
 	
 	//字符串截取，支持中文和其他编码
 	static public function substring($str, $start=0, $length, $charset="utf-8", $suffix=true) {
-		/**
-		 +----------------------------------------------------------
-		 * @param string $str 需要转换的字符串
-		 * @param string $start 开始位置
-		 * @param string $length 截取长度
-		 * @param string $charset 编码格式
-		 * @param string $suffix 是否显示截断字符"..."
-		 +----------------------------------------------------------
-		 * @return string
-		 +----------------------------------------------------------
-		 */
+		/*
+			+----------------------------------------------------------
+			| @param string $str 需要转换的字符串
+			| @param string $start 开始位置
+			| @param string $length 截取长度
+			| @param string $charset 编码格式
+			| @param string $suffix 是否显示截断字符"..."
+			+----------------------------------------------------------
+			| @return string
+			+----------------------------------------------------------
+		*/
 		if(function_exists("mb_substr"))
             $slice = mb_substr($str, $start, $length, $charset);
         elseif(function_exists('iconv_substr')) {
@@ -196,14 +196,14 @@ class Evildao {
 	
 	//代码高亮
 	static public function highlight_code($str,$show=false) {
-		/**
-		 +----------------------------------------------------------
-		 * @param String  $str 要高亮显示的字符串 或者 文件名
-		 * @param Boolean $show 是否输出
-		 +----------------------------------------------------------
-		 * @return String
-		 +----------------------------------------------------------
-		 */
+		/*
+			+----------------------------------------------------------
+			| @param String  $str 要高亮显示的字符串 或者 文件名
+			| @param Boolean $show 是否输出
+			+----------------------------------------------------------
+			| @return String
+			+----------------------------------------------------------
+		*/
 		if(file_exists($str)) {
 			$str    =   file_get_contents($str);
 		}
@@ -237,21 +237,16 @@ class Evildao {
 	//输出安全的html
 	static public function aq_html($text, $tags = null) {
 		$text	=	trim($text);
-		//完全过滤注释
-		$text	=	preg_replace('/<!--?.*-->/','',$text);
-		//完全过滤动态代码
-		$text	=	preg_replace('/<\?|\?'.'>/','',$text);
-		//完全过滤js
-		$text	=	preg_replace('/<script?.*\/script>/','',$text);
-
+		$text	=	preg_replace('/<!--?.*-->/','',$text);//完全过滤注释
+		$text	=	preg_replace('/<\?|\?'.'>/','',$text);//完全过滤动态代码
+		$text	=	preg_replace('/<script?.*\/script>/','',$text);//完全过滤js
 		$text	=	str_replace('[','&#091;',$text);
 		$text	=	str_replace(']','&#093;',$text);
 		$text	=	str_replace('|','&#124;',$text);
-		//过滤换行符
-		$text	=	preg_replace('/\r?\n/','',$text);
-		//br
-		$text	=	preg_replace('/<br(\s\/)?'.'>/i','[br]',$text);
+		$text	=	preg_replace('/\r?\n/','',$text);//过滤换行符
+		$text	=	preg_replace('/<br(\s\/)?'.'>/i','[br]',$text);//<br> 转 [br]
 		$text	=	preg_replace('/(\[br\]\s*){10,}/i','[br]',$text);
+		
 		//过滤危险的属性，如：过滤on事件lang js
 		while(preg_match('/(<[^><]+)( lang|on|action|background|codebase|dynsrc|lowsrc)[^><]+/i',$text,$mat)){
 			$text=str_replace($mat[0],$mat[1],$text);
@@ -262,32 +257,39 @@ class Evildao {
 		if(empty($tags)) {
 			$tags = 'table|td|th|tr|i|b|u|strong|img|p|br|div|strong|em|ul|ol|li|dl|dd|dt|a';
 		}
-		//允许的HTML标签
-		$text	=	preg_replace('/<('.$tags.')( [^><\[\]]*)>/i','[\1\2]',$text);
+		$text	=	preg_replace('/<('.$tags.')( [^><\[\]]*)>/i','[\1\2]',$text);//允许的HTML标签
+		
 		//过滤多余html
 		$text	=	preg_replace('/<\/?(html|head|meta|link|base|basefont|body|bgsound|title|style|script|form|iframe|frame|frameset|applet|id|ilayer|layer|name|script|style|xml)[^><]*>/i','',$text);
+
 		//过滤合法的html标签
 		while(preg_match('/<([a-z]+)[^><\[\]]*>[^><]*<\/\1>/i',$text,$mat)){
 			$text=str_replace($mat[0],str_replace('>',']',str_replace('<','[',$mat[0])),$text);
 		}
+		
 		//转换引号
 		while(preg_match('/(\[[^\[\]]*=\s*)(\"|\')([^\2=\[\]]+)\2([^\[\]]*\])/i',$text,$mat)){
 			$text=str_replace($mat[0],$mat[1].'|'.$mat[3].'|'.$mat[4],$text);
 		}
+		
 		//过滤错误的单个引号
 		while(preg_match('/\[[^\[\]]*(\"|\')[^\[\]]*\]/i',$text,$mat)){
 			$text=str_replace($mat[0],str_replace($mat[1],'',$mat[0]),$text);
 		}
+		
 		//转换其它所有不合法的 < >
 		$text	=	str_replace('<','&lt;',$text);
 		$text	=	str_replace('>','&gt;',$text);
 		$text	=	str_replace('"','&quot;',$text);
+		
 		 //反转换
 		$text	=	str_replace('[','<',$text);
 		$text	=	str_replace(']','>',$text);
 		$text	=	str_replace('|','"',$text);
+		
 		//过滤多余空格
 		$text	=	str_replace('  ',' ',$text);
+		
 		return $text;
 	}
 
@@ -330,21 +332,21 @@ class Evildao {
 
 	// 产生随机字串，可用来自动生成密码
 	static public function randstring($len=6,$type='',$addChars='') {
-		/**
-		 +----------------------------------------------------------
-		 * @param string $len 长度
-		 * @param string $type 字串类型
-		 * 						0 		字母(大小写混合)
-		 *						1 		数字
-		 *						2 		大写字母
-		 *						3 		小写字母
-		 *						4 		中文
-		 *						其它 	大小写字母数字混合(去混合)
-		 * @param string $addChars 额外字符
-		 +----------------------------------------------------------
-		 * @return string
-		 +----------------------------------------------------------
-		 */
+		/*
+			+----------------------------------------------------------
+			| @param string $len 长度
+			| @param string $type 字串类型
+			| 						0 		字母(大小写混合)
+			|						1 		数字
+			|						2 		大写字母
+			|						3 		小写字母
+			|						4 		中文
+			|						其它 	大小写字母数字混合(去混合)
+			| @param string $addChars 额外字符
+			+----------------------------------------------------------
+			| @return string
+			+----------------------------------------------------------
+		*/
 		$str ='';
 		switch($type) {
 			case 0:
@@ -367,15 +369,14 @@ class Evildao {
 				$chars='ABCDEFGHIJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'.$addChars;
 				break;
 		}
-		if($len>10 ) {//位数过长重复字符串一定次数
+		if($len>10 ) { //位数过长重复字符串一定次数
 			$chars= $type==1? str_repeat($chars,$len) : str_repeat($chars,5);
 		}
 		if($type!=4) {
 			$chars   =   str_shuffle($chars);
 			$str     =   substr($chars,0,$len);
 		}else{
-			// 中文随机字
-			for($i=0;$i<$len;$i++){
+			for($i=0;$i<$len;$i++){// 中文随机字
 			  $str.= self::msubstr($chars, floor(mt_rand(0,mb_strlen($chars,'utf-8')-1)),1,'utf-8',false);
 			}
 		}
